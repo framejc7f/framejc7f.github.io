@@ -1,0 +1,81 @@
+function requireElement(id) {
+    const element = document.getElementById(id);
+
+    if (!element) {
+        throw new Error(`Не найден обязательный элемент: ${id}`);
+    }
+
+    return element;
+}
+
+export function getElements() {
+    return {
+        realBalance: requireElement('realBalance'),
+        realIncome: requireElement('realIncome'),
+        realExpense: requireElement('realExpense'),
+        monthObligationLeft: requireElement('monthObligationLeft'),
+        currentMonthYear: requireElement('currentMonthYear'),
+        calendarGrid: requireElement('calendarGrid'),
+        selectedDateInfo: requireElement('selectedDateInfo'),
+        calendarContent: requireElement('calendarContent'),
+        calendarCollapseIcon: requireElement('calendarCollapseIcon'),
+        historyContent: requireElement('historyContent'),
+        historyCollapseIcon: requireElement('historyCollapseIcon'),
+        obligationsList: requireElement('obligationsList'),
+        collapseIcon: requireElement('collapseIcon'),
+        categorySelect: requireElement('categorySelect'),
+        debtFields: requireElement('debtFields'),
+        debtPerson: requireElement('debtPerson'),
+        debtRepaymentDate: requireElement('debtRepaymentDate'),
+        transactionsList: requireElement('transactionsList'),
+        obligTitle: requireElement('obligTitle'),
+        obligAmount: requireElement('obligAmount'),
+        obligDate: requireElement('obligDate'),
+        obligIsRecurring: requireElement('obligIsRecurring'),
+        recurringFields: requireElement('recurringFields'),
+        obligFrequency: requireElement('obligFrequency'),
+        obligWeekday: requireElement('obligWeekday'),
+        obligMonthday: requireElement('obligMonthday'),
+        obligMonthdayLabel: requireElement('obligMonthdayLabel'),
+        amountInput: requireElement('amountInput'),
+        pieChart: requireElement('pieChart'),
+        pieLegend: requireElement('pieLegend'),
+        barChart: requireElement('barChart'),
+        avgIncome: requireElement('avgIncome'),
+        avgExpense: requireElement('avgExpense'),
+        totalOperations: requireElement('totalOperations'),
+        potentialMonthTotal: requireElement('potentialMonthTotal'),
+        obligationsMonthTotal: requireElement('obligationsMonthTotal'),
+        forecastBalance: requireElement('forecastBalance'),
+        tabOperations: requireElement('tabOperations'),
+        tabAnalytics: requireElement('tabAnalytics'),
+        operationsTab: requireElement('operationsTab'),
+        analyticsTab: requireElement('analyticsTab'),
+        currentDateTime: requireElement('currentDateTime'),
+        obligationsHeader: requireElement('obligationsHeader'),
+        calendarHeader: requireElement('calendarHeader'),
+        historyHeader: requireElement('historyHeader'),
+        exportDataBtn: requireElement('exportDataBtn'),
+        importDataBtn: requireElement('importDataBtn'),
+        importFile: requireElement('importFile'),
+        formModal: requireElement('formModal'),
+        formModalTitle: requireElement('formModalTitle'),
+        formModalForm: requireElement('formModalForm'),
+        formModalFields: requireElement('formModalFields'),
+        formModalError: requireElement('formModalError'),
+        formModalCancel: requireElement('formModalCancel'),
+        formModalCancelAlt: requireElement('formModalCancelAlt'),
+        formModalSubmit: requireElement('formModalSubmit'),
+        addObligationBtn: requireElement('addObligationBtn'),
+        addRegularBtn: requireElement('addRegularBtn'),
+        clearAllBtn: requireElement('clearAllBtn'),
+        filterAll: requireElement('filterAll'),
+        filterIncome: requireElement('filterIncome'),
+        filterExpense: requireElement('filterExpense'),
+        filterDebt: requireElement('filterDebt'),
+        incomeTypeBtn: requireElement('incomeTypeBtn'),
+        expenseTypeBtn: requireElement('expenseTypeBtn'),
+        prevMonthBtn: requireElement('prevMonthBtn'),
+        nextMonthBtn: requireElement('nextMonthBtn')
+    };
+}
