@@ -1,0 +1,17 @@
+{
+  "name": "Финансовый помощник",
+  "short_name": "Финансы",
+  "description": "Личный учет доходов и расходов",
+  "start_url": "./auth.html",
+  "display": "standalone",
+  "theme_color": "#21ac50",
+  "background_color": "#21ac50",
+  "icons": [
+    {
+      "src": "./public/icons/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

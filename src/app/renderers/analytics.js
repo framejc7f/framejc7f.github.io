@@ -2,22 +2,19 @@ import { formatCurrency, getDatePart } from '../utils.js';
 import { calcRealBalance, getRealExpense, getRealIncome } from './balance.js';
 
 export function updateAnalytics(state, elements) {
-    if (!elements.pieChart) {
-        return;
-    }
-
     const expenses = state.transactions.filter((transaction) => transaction.type === 'expense');
     const categories = {};
 
     expenses.forEach((expense) => {
-        categories[expense.category] = (categories[expense.category] || 0) + expense.amount;
+        const category = expense.category || 'Без категории';
+        categories[category] = (categories[category] || 0) + expense.amount;
     });
 
     const sortedCategories = Object.entries(categories)
         .sort((first, second) => second[1] - first[1])
         .slice(0, 5);
 
-    const colors = ['#f56565', '#ed8936', '#ecc94b', '#48bb78', '#4299e1'];
+    const colors = ['#e96a5b', '#ff9c47', '#f5c84c', '#4fb885', '#4e89f7'];
     const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
     let pieHtml = '';
@@ -31,28 +28,28 @@ export function updateAnalytics(state, elements) {
 
         pieHtml += `
             <div class="pie-segment" style="
-                background: conic-gradient(transparent 0deg ${rotation}deg, ${colors[index % colors.length]} ${rotation}deg ${rotation + percent * 3.6}deg, transparent ${rotation + percent * 3.6}deg 360deg);
+                background: conic-gradient(
+                    transparent 0deg ${rotation}deg,
+                    ${colors[index % colors.length]} ${rotation}deg ${rotation + percent * 3.6}deg,
+                    transparent ${rotation + percent * 3.6}deg 360deg
+                );
             "></div>
         `;
 
         legendHtml += `
             <div class="legend-item">
-                <span class="legend-color" style="background: ${colors[index % colors.length]};"></span>
+                <span class="legend-color" style="background:${colors[index % colors.length]};"></span>
                 <span>${category}: ${formatCurrency(amount)} (${percent.toFixed(1)}%)</span>
             </div>
         `;
     });
 
-    if (sortedCategories.length === 0) {
-        pieHtml = '<div style="text-align:center; padding:50px;">Нет данных</div>';
-        legendHtml = '<div class="legend-item">Нет расходов</div>';
-    }
-
-    elements.pieChart.innerHTML = pieHtml;
-    elements.pieLegend.innerHTML = legendHtml;
+    elements.pieChart.innerHTML = pieHtml || '<div class="empty-message">Нет данных</div>';
+    elements.pieLegend.innerHTML = legendHtml || '<div class="legend-item">Расходов пока нет</div>';
 
     const last7Days = [];
     const today = new Date();
+
     for (let index = 6; index >= 0; index -= 1) {
         const date = new Date(today);
         date.setDate(date.getDate() - index);
@@ -60,6 +57,7 @@ export function updateAnalytics(state, elements) {
     }
 
     let barHtml = '';
+
     last7Days.forEach((date) => {
         const dayIncome = state.transactions
             .filter((transaction) => transaction.type === 'income' && getDatePart(transaction.date) === date)
@@ -67,32 +65,39 @@ export function updateAnalytics(state, elements) {
         const dayExpense = state.transactions
             .filter((transaction) => transaction.type === 'expense' && getDatePart(transaction.date) === date)
             .reduce((sum, transaction) => sum + transaction.amount, 0);
-
         const maxAmount = Math.max(dayIncome, dayExpense, 1);
-        const incomeHeight = (dayIncome / maxAmount) * 150;
-        const expenseHeight = (dayExpense / maxAmount) * 150;
 
         barHtml += `
             <div class="bar-container">
-                <div class="bar income" style="height: ${incomeHeight}px;"></div>
-                <div class="bar expense" style="height: ${expenseHeight}px;"></div>
-                <div class="bar-label">${new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}</div>
+                <div class="bar income" style="height:${(dayIncome / maxAmount) * 150}px;"></div>
+                <div class="bar expense" style="height:${(dayExpense / maxAmount) * 150}px;"></div>
+                <div class="bar-label">${new Date(`${date}T12:00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}</div>
             </div>
         `;
     });
 
     elements.barChart.innerHTML = barHtml;
 
+    const earliestTransactionDate = state.transactions.reduce((earliest, transaction) => {
+        const transactionDate = new Date(transaction.date);
+
+        if (!earliest || transactionDate < earliest) {
+            return transactionDate;
+        }
+
+        return earliest;
+    }, null);
+
     const totalDays = Math.max(
         1,
-        Math.ceil((new Date() - new Date(state.transactions[0]?.date || Date.now())) / (1000 * 60 * 60 * 24))
+        Math.ceil((new Date() - new Date(earliestTransactionDate || Date.now())) / (1000 * 60 * 60 * 24))
     );
     const avgIncome = getRealIncome(state) / totalDays;
     const avgExpense = getRealExpense(state) / totalDays;
 
     elements.avgIncome.textContent = formatCurrency(avgIncome);
     elements.avgExpense.textContent = formatCurrency(avgExpense);
-    elements.totalOperations.textContent = state.transactions.length;
+    elements.totalOperations.textContent = String(state.transactions.length);
 
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];

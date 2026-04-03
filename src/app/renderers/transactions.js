@@ -18,7 +18,7 @@ export function renderTransactions(state, elements) {
     }
 
     if (filteredTransactions.length === 0) {
-        elements.transactionsList.innerHTML = '<li class="empty-message">Нет операций</li>';
+        elements.transactionsList.innerHTML = '<li class="empty-message">Операций пока нет</li>';
         return;
     }
 
@@ -29,39 +29,37 @@ export function renderTransactions(state, elements) {
     let html = '';
 
     sortedTransactions.forEach((transaction) => {
-        const sign = transaction.type === 'income' ? '+' : '−';
         const amountClass = transaction.type === 'income' ? 'income-amount' : 'expense-amount';
-        const personInfo = transaction.person ? ` (${transaction.person})` : '';
+        const title = transaction.title || transaction.category || 'Операция';
+        const comment = transaction.comment
+            ? `<div class="transaction-comment">${escapeHtml(transaction.comment)}</div>`
+            : '';
 
         let mark = '';
         if (transaction.fromObligation) {
-            mark = ' (обяз.)';
-        }
-        if (transaction.isDebt) {
-            mark = ' 💸';
-        }
-        if (transaction.isDebtPayment) {
-            mark = ' ↩️';
-        }
-        if (transaction.fromPotential) {
-            mark = ' ⚡';
+            mark = '<span class="debt-badge">из платежа</span>';
+        } else if (transaction.fromPotential) {
+            mark = '<span class="debt-badge">подтверждено</span>';
+        } else if (transaction.isDebt) {
+            mark = '<span class="debt-badge">долг</span>';
+        } else if (transaction.isDebtPayment) {
+            mark = '<span class="debt-badge">возврат</span>';
         }
 
         html += `
             <li class="transaction-item" data-id="${transaction.id}" data-date="${getDatePart(transaction.date)}">
                 <div class="transaction-info">
-                    <span class="transaction-title">
-                        ${escapeHtml(transaction.title)}${personInfo}${mark}
-                        ${transaction.isDebt ? '<span class="debt-badge">долг</span>' : ''}
-                        ${transaction.isDebtPayment ? '<span class="debt-badge">возврат</span>' : ''}
-                        ${transaction.fromPotential ? '<span class="debt-badge" style="background:#ed8936; color:white;">подтвержден</span>' : ''}
-                    </span>
-                    <span class="transaction-datetime">${formatDateTime(transaction.date)}</span>
+                    <div class="transaction-title">
+                        ${escapeHtml(title)}
+                        ${mark}
+                    </div>
+                    <div class="transaction-datetime">${formatDateTime(transaction.date)}</div>
+                    ${comment}
                 </div>
                 <div class="transaction-amount">
-                    <span class="${amountClass}">${sign} ${formatCurrency(transaction.amount)}</span>
+                    <span class="${amountClass}">${formatCurrency(transaction.amount)}</span>
                     <button class="edit-btn" type="button" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>
-                    <button class="delete-btn" type="button" data-action="delete-transaction" data-id="${transaction.id}">✕</button>
+                    <button class="delete-btn" type="button" data-action="delete-transaction" data-id="${transaction.id}" title="Удалить">✕</button>
                 </div>
             </li>
         `;

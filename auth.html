@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./public/icons/icon.png" type="image/png">
+    <link rel="manifest" href="./manifest.json">
+    <title>Вход | Финансовый помощник</title>
+    <link rel="stylesheet" href="./src/styles/main.css">
+</head>
+
+<body class="auth-page" data-theme="light">
+    <main class="auth-shell">
+        <section class="auth-layout">
+            <div class="auth-hero-panel">
+                <span class="hero-eyebrow">Supabase Auth</span>
+                <h1>Финансовый помощник</h1>
+                <p class="auth-hero-text">
+                    Войдите или создайте аккаунт, чтобы получить доступ к приложению и синхронизации данных.
+                </p>
+                <div class="auth-hero-points">
+                    <div class="auth-point">Данные хранятся в Supabase и доступны только владельцу аккаунта.</div>
+                    <div class="auth-point">Без авторизации функционал приложения недоступен.</div>
+                    <div class="auth-point">После входа вы автоматически попадёте в основное приложение.</div>
+                </div>
+            </div>
+
+            <div class="settings-card auth-entry-card">
+                <div class="settings-card-head">
+                    <div>
+                        <h2>Авторизация</h2>
+                        <p>Используйте email и пароль. Если аккаунта ещё нет, нажмите «Регистрация».</p>
+                    </div>
+                </div>
+
+                <div class="modal-grid auth-fields">
+                    <div class="modal-field">
+                        <label for="authPageEmail">Email</label>
+                        <input id="authPageEmail" type="email" placeholder="you@example.com" autocomplete="email">
+                    </div>
+                    <div class="modal-field">
+                        <label for="authPagePassword">Пароль</label>
+                        <input id="authPagePassword" type="password" placeholder="Не меньше 6 символов" autocomplete="current-password">
+                    </div>
+                </div>
+
+                <div class="settings-actions auth-actions">
+                    <button class="export-btn" id="authPageSignIn" type="button">Войти</button>
+                    <button class="import-btn" id="authPageSignUp" type="button">Регистрация</button>
+                </div>
+
+                <div class="sync-status" id="authPageStatus" data-status="local">
+                    Чтобы открыть приложение, сначала войдите в аккаунт.
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="./src/auth.js?v=20260403b"></script>
+    <script>
+        const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+        if ('serviceWorker' in navigator && isLocalhost) {
+            navigator.serviceWorker.getRegistrations()
+                .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+                .then(() => console.log('SW disabled for localhost'))
+                .catch((err) => console.log('SW cleanup error:', err));
+        } else if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registered:', reg))
+                    .catch(err => console.log('SW error:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

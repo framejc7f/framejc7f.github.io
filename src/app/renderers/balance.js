@@ -34,5 +34,5 @@ export function updateRealStats(state, elements) {
     elements.realBalance.textContent = formatCurrency(calcRealBalance(state));
     elements.realIncome.textContent = formatCurrency(getRealIncome(state));
     elements.realExpense.textContent = formatCurrency(getRealExpense(state));
-    elements.monthObligationLeft.textContent = `осталось: ${formatCurrency(getTotalUnpaidObligations(state))}`;
+    elements.monthObligationLeft.textContent = `Осталось: ${formatCurrency(getTotalUnpaidObligations(state))}`;
 }

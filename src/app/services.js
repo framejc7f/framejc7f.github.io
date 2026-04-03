@@ -1,69 +1,157 @@
-const STORAGE_KEYS = {
+const LEGACY_STORAGE_KEYS = {
     transactions: 'finance_real_transactions',
     obligations: 'finance_obligations',
     potentialIncomes: 'finance_potential_incomes',
     obligationsCollapsed: 'finance_obligations_collapsed',
     calendarCollapsed: 'finance_calendar_collapsed',
-    historyCollapsed: 'finance_history_collapsed'
+    historyCollapsed: 'finance_history_collapsed',
+    theme: 'finance_theme'
 };
 
-export function loadFromStorage(state) {
-    const savedTransactions = localStorage.getItem(STORAGE_KEYS.transactions);
-    if (savedTransactions) {
-        try {
-            state.transactions = JSON.parse(savedTransactions);
-        } catch {
-            state.transactions = [];
-        }
-    } else {
-        state.transactions = [];
-    }
+let currentStorageScope = 'guest';
+let storageSyncHandler = null;
 
-    const savedObligations = localStorage.getItem(STORAGE_KEYS.obligations);
-    if (savedObligations) {
-        try {
-            state.obligations = JSON.parse(savedObligations);
-        } catch {
-            state.obligations = [];
-        }
-    } else {
-        state.obligations = [];
-    }
+function getScopedKey(key) {
+    return `finance_cache_${currentStorageScope}_${key}`;
+}
 
-    const savedPotentialIncomes = localStorage.getItem(STORAGE_KEYS.potentialIncomes);
-    if (savedPotentialIncomes) {
-        try {
-            state.potentialIncomes = JSON.parse(savedPotentialIncomes);
-        } catch {
-            state.potentialIncomes = [];
-        }
-    } else {
-        state.potentialIncomes = [];
-    }
+function getScopedStorageKeys() {
+    return {
+        transactions: getScopedKey('transactions'),
+        obligations: getScopedKey('obligations'),
+        potentialIncomes: getScopedKey('potential_incomes'),
+        obligationsCollapsed: getScopedKey('obligations_collapsed'),
+        calendarCollapsed: getScopedKey('calendar_collapsed'),
+        historyCollapsed: getScopedKey('history_collapsed'),
+        theme: getScopedKey('theme')
+    };
+}
 
-    const savedObligationsCollapsed = localStorage.getItem(STORAGE_KEYS.obligationsCollapsed);
-    if (savedObligationsCollapsed) {
-        state.isObligationsCollapsed = savedObligationsCollapsed === 'true';
-    }
+function readArrayValue(key) {
+    const rawValue = localStorage.getItem(key);
 
-    const savedCalendarCollapsed = localStorage.getItem(STORAGE_KEYS.calendarCollapsed);
-    if (savedCalendarCollapsed) {
-        state.isCalendarCollapsed = savedCalendarCollapsed === 'true';
-    }
-
-    const savedHistoryCollapsed = localStorage.getItem(STORAGE_KEYS.historyCollapsed);
-    if (savedHistoryCollapsed) {
-        state.isHistoryCollapsed = savedHistoryCollapsed === 'true';
+    try {
+        return rawValue ? JSON.parse(rawValue) : [];
+    } catch {
+        return [];
     }
 }
 
-export function saveToStorage(state) {
-    localStorage.setItem(STORAGE_KEYS.transactions, JSON.stringify(state.transactions));
-    localStorage.setItem(STORAGE_KEYS.obligations, JSON.stringify(state.obligations));
-    localStorage.setItem(STORAGE_KEYS.potentialIncomes, JSON.stringify(state.potentialIncomes));
-    localStorage.setItem(STORAGE_KEYS.obligationsCollapsed, state.isObligationsCollapsed);
-    localStorage.setItem(STORAGE_KEYS.calendarCollapsed, state.isCalendarCollapsed);
-    localStorage.setItem(STORAGE_KEYS.historyCollapsed, state.isHistoryCollapsed);
+function applySnapshotToState(state, snapshot) {
+    state.transactions = Array.isArray(snapshot.transactions) ? snapshot.transactions : [];
+    state.obligations = Array.isArray(snapshot.obligations) ? snapshot.obligations : [];
+    state.potentialIncomes = Array.isArray(snapshot.potentialIncomes) ? snapshot.potentialIncomes : [];
+    state.isObligationsCollapsed = Boolean(snapshot.isObligationsCollapsed);
+    state.isCalendarCollapsed = Boolean(snapshot.isCalendarCollapsed);
+    state.isHistoryCollapsed = Boolean(snapshot.isHistoryCollapsed);
+    state.theme = snapshot.theme === 'dark' ? 'dark' : 'light';
+}
+
+export function createSnapshotFromState(state) {
+    return {
+        transactions: JSON.parse(JSON.stringify(state.transactions || [])),
+        obligations: JSON.parse(JSON.stringify(state.obligations || [])),
+        potentialIncomes: JSON.parse(JSON.stringify(state.potentialIncomes || [])),
+        isObligationsCollapsed: Boolean(state.isObligationsCollapsed),
+        isCalendarCollapsed: Boolean(state.isCalendarCollapsed),
+        isHistoryCollapsed: Boolean(state.isHistoryCollapsed),
+        theme: state.theme === 'dark' ? 'dark' : 'light'
+    };
+}
+
+export function setStorageScope(scope) {
+    currentStorageScope = scope || 'guest';
+}
+
+export function setStorageSyncHandler(handler) {
+    storageSyncHandler = typeof handler === 'function' ? handler : null;
+}
+
+export function loadFromStorage(state) {
+    const storageKeys = getScopedStorageKeys();
+
+    applySnapshotToState(state, {
+        transactions: readArrayValue(storageKeys.transactions),
+        obligations: readArrayValue(storageKeys.obligations),
+        potentialIncomes: readArrayValue(storageKeys.potentialIncomes),
+        isObligationsCollapsed: localStorage.getItem(storageKeys.obligationsCollapsed) === 'true',
+        isCalendarCollapsed: localStorage.getItem(storageKeys.calendarCollapsed) === 'true',
+        isHistoryCollapsed: localStorage.getItem(storageKeys.historyCollapsed) === 'true',
+        theme: localStorage.getItem(storageKeys.theme)
+    });
+}
+
+export function loadStorageSnapshotForScope(scope) {
+    const previousScope = currentStorageScope;
+
+    try {
+        setStorageScope(scope);
+
+        const storageKeys = getScopedStorageKeys();
+
+        return {
+            transactions: readArrayValue(storageKeys.transactions),
+            obligations: readArrayValue(storageKeys.obligations),
+            potentialIncomes: readArrayValue(storageKeys.potentialIncomes),
+            settings: {
+                isObligationsCollapsed: localStorage.getItem(storageKeys.obligationsCollapsed) === 'true',
+                isCalendarCollapsed: localStorage.getItem(storageKeys.calendarCollapsed) === 'true',
+                isHistoryCollapsed: localStorage.getItem(storageKeys.historyCollapsed) === 'true',
+                theme: localStorage.getItem(storageKeys.theme) === 'dark' ? 'dark' : 'light'
+            }
+        };
+    } finally {
+        setStorageScope(previousScope);
+    }
+}
+
+export function saveToStorage(state, options = {}) {
+    const storageKeys = getScopedStorageKeys();
+
+    localStorage.setItem(storageKeys.transactions, JSON.stringify(state.transactions));
+    localStorage.setItem(storageKeys.obligations, JSON.stringify(state.obligations));
+    localStorage.setItem(storageKeys.potentialIncomes, JSON.stringify(state.potentialIncomes));
+    localStorage.setItem(storageKeys.obligationsCollapsed, String(state.isObligationsCollapsed));
+    localStorage.setItem(storageKeys.calendarCollapsed, String(state.isCalendarCollapsed));
+    localStorage.setItem(storageKeys.historyCollapsed, String(state.isHistoryCollapsed));
+    localStorage.setItem(storageKeys.theme, state.theme);
+
+    if (!options.skipSync && storageSyncHandler) {
+        Promise.resolve(storageSyncHandler(createSnapshotFromState(state))).catch(() => {
+            // Sync errors are surfaced by the app-level UI state.
+        });
+    }
+}
+
+export function clearStorageCache() {
+    const storageKeys = getScopedStorageKeys();
+
+    Object.values(storageKeys).forEach((key) => {
+        localStorage.removeItem(key);
+    });
+}
+
+export function hasLegacyStorageData() {
+    return [
+        LEGACY_STORAGE_KEYS.transactions,
+        LEGACY_STORAGE_KEYS.obligations,
+        LEGACY_STORAGE_KEYS.potentialIncomes,
+        LEGACY_STORAGE_KEYS.theme
+    ].some((key) => localStorage.getItem(key) !== null);
+}
+
+export function loadLegacyStorageSnapshot() {
+    return {
+        transactions: readArrayValue(LEGACY_STORAGE_KEYS.transactions),
+        obligations: readArrayValue(LEGACY_STORAGE_KEYS.obligations),
+        potentialIncomes: readArrayValue(LEGACY_STORAGE_KEYS.potentialIncomes),
+        settings: {
+            isObligationsCollapsed: localStorage.getItem(LEGACY_STORAGE_KEYS.obligationsCollapsed) === 'true',
+            isCalendarCollapsed: localStorage.getItem(LEGACY_STORAGE_KEYS.calendarCollapsed) === 'true',
+            isHistoryCollapsed: localStorage.getItem(LEGACY_STORAGE_KEYS.historyCollapsed) === 'true',
+            theme: localStorage.getItem(LEGACY_STORAGE_KEYS.theme) === 'dark' ? 'dark' : 'light'
+        }
+    };
 }
 
 export function exportData(state) {
@@ -74,10 +162,11 @@ export function exportData(state) {
         settings: {
             isObligationsCollapsed: state.isObligationsCollapsed,
             isCalendarCollapsed: state.isCalendarCollapsed,
-            isHistoryCollapsed: state.isHistoryCollapsed
+            isHistoryCollapsed: state.isHistoryCollapsed,
+            theme: state.theme
         },
         exportDate: new Date().toISOString(),
-        version: '1.0'
+        version: '2.0'
     };
 
     const jsonString = JSON.stringify(data, null, 2);
@@ -101,7 +190,7 @@ export function importData(file) {
             try {
                 const data = JSON.parse(event.target.result);
 
-                if (!data.transactions || !data.obligations || !data.potentialIncomes) {
+                if (!Array.isArray(data.transactions) || !Array.isArray(data.obligations) || !Array.isArray(data.potentialIncomes)) {
                     throw new Error('Неверный формат файла');
                 }
 
@@ -125,8 +214,9 @@ export function applyImportedData(state, data) {
     state.potentialIncomes = data.potentialIncomes || [];
 
     if (data.settings) {
-        state.isObligationsCollapsed = data.settings.isObligationsCollapsed || false;
-        state.isCalendarCollapsed = data.settings.isCalendarCollapsed || false;
-        state.isHistoryCollapsed = data.settings.isHistoryCollapsed || false;
+        state.isObligationsCollapsed = Boolean(data.settings.isObligationsCollapsed);
+        state.isCalendarCollapsed = Boolean(data.settings.isCalendarCollapsed);
+        state.isHistoryCollapsed = Boolean(data.settings.isHistoryCollapsed);
+        state.theme = data.settings.theme === 'dark' ? 'dark' : 'light';
     }
 }

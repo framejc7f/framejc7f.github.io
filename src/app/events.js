@@ -1,20 +1,12 @@
 export function bindEvents(elements, handlers) {
     elements.calendarGrid.addEventListener('click', (event) => {
         const day = event.target.closest('.calendar-day[data-date]');
-        if (!day) {
-            return;
+        if (day) {
+            handlers.selectCalendarDate(day.dataset.date);
         }
-
-        handlers.selectCalendarDate(day.dataset.date);
     });
 
     elements.selectedDateInfo.addEventListener('click', (event) => {
-        const addPotentialButton = event.target.closest('#addPotentialInlineBtn');
-        if (addPotentialButton) {
-            handlers.addPotentialIncome();
-            return;
-        }
-
         const confirmPotentialButton = event.target.closest('[data-action="confirm-potential"]');
         if (confirmPotentialButton) {
             handlers.confirmPotentialIncome(Number(confirmPotentialButton.dataset.id));
@@ -71,27 +63,28 @@ export function bindEvents(elements, handlers) {
         }
     });
 
-    elements.addObligationBtn.addEventListener('click', handlers.addObligation);
-    elements.addRegularBtn.addEventListener('click', handlers.addRegularTransaction);
-    elements.clearAllBtn.addEventListener('click', handlers.clearAllTransactions);
-    elements.obligIsRecurring.addEventListener('change', handlers.handleRecurringSettingsChange);
-    elements.obligFrequency.addEventListener('change', handlers.handleRecurringSettingsChange);
-    elements.obligDate.addEventListener('change', handlers.handleObligationDateChange);
-
     elements.filterAll.addEventListener('click', () => handlers.setFilter('all'));
     elements.filterIncome.addEventListener('click', () => handlers.setFilter('income'));
     elements.filterExpense.addEventListener('click', () => handlers.setFilter('expense'));
     elements.filterDebt.addEventListener('click', () => handlers.setFilter('debt'));
 
-    elements.incomeTypeBtn.addEventListener('click', () => handlers.setType('income'));
-    elements.expenseTypeBtn.addEventListener('click', () => handlers.setType('expense'));
-    elements.categorySelect.addEventListener('change', handlers.handleCategoryChange);
-
     elements.prevMonthBtn.addEventListener('click', handlers.showPreviousMonth);
     elements.nextMonthBtn.addEventListener('click', handlers.showNextMonth);
 
-    elements.tabOperations.addEventListener('click', () => handlers.setTab('operations'));
-    elements.tabAnalytics.addEventListener('click', () => handlers.setTab('analytics'));
+    elements.navHomeBtn.addEventListener('click', () => handlers.setScreen('home'));
+    elements.navSettingsBtn.addEventListener('click', () => handlers.setScreen('settings'));
+    elements.openOperationModalBtn.addEventListener('click', handlers.openOperationModal);
+    elements.signOutBtn.addEventListener('click', handlers.signOut);
+
+    if (elements.signInBtn) {
+        elements.signInBtn.addEventListener('click', handlers.signIn);
+    }
+
+    if (elements.signUpBtn) {
+        elements.signUpBtn.addEventListener('click', handlers.signUp);
+    }
+
+    elements.themeToggle.addEventListener('change', handlers.toggleTheme);
 
     elements.obligationsHeader.addEventListener('click', handlers.toggleObligationsCollapse);
     elements.calendarHeader.addEventListener('click', handlers.toggleCalendarCollapse);
@@ -101,10 +94,13 @@ export function bindEvents(elements, handlers) {
     elements.importDataBtn.addEventListener('click', () => {
         elements.importFile.click();
     });
+
     elements.importFile.addEventListener('change', (event) => {
         if (event.target.files.length > 0) {
             handlers.importData(event.target.files[0]);
             event.target.value = '';
         }
     });
+
+    elements.clearAllBtn.addEventListener('click', handlers.clearAllTransactions);
 }

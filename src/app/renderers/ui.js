@@ -1,14 +1,24 @@
-import { escapeHtml } from '../utils.js';
-
 function setCollapsedState(content, icon, isCollapsed) {
-    if (isCollapsed) {
-        content.classList.add('collapsed');
-        icon.classList.add('collapsed');
-        return;
-    }
+    content.classList.toggle('collapsed', isCollapsed);
+    icon.classList.toggle('collapsed', isCollapsed);
+}
 
-    content.classList.remove('collapsed');
-    icon.classList.remove('collapsed');
+function setText(element, value) {
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+function setHidden(element, hidden) {
+    if (element) {
+        element.hidden = hidden;
+    }
+}
+
+function setDisabled(element, disabled) {
+    if (element) {
+        element.disabled = disabled;
+    }
 }
 
 export function updateCalendarCollapseUI(state, elements) {
@@ -23,62 +33,6 @@ export function updateObligationsCollapseUI(state, elements) {
     setCollapsedState(elements.obligationsList, elements.collapseIcon, state.isObligationsCollapsed);
 }
 
-export function updateDebtFieldsVisibility(state, elements) {
-    if (state.currentType === 'income' && elements.categorySelect.value === 'Взял в долг') {
-        elements.debtFields.classList.add('visible');
-        return;
-    }
-
-    elements.debtFields.classList.remove('visible');
-}
-
-export function updateRecurringFieldsVisibility(elements) {
-    const isRecurring = elements.obligIsRecurring.checked;
-    const isDaily = elements.obligFrequency.value === 'daily';
-    const isWeekly = elements.obligFrequency.value === 'weekly';
-
-    elements.recurringFields.classList.toggle('visible', isRecurring);
-    elements.obligWeekday.classList.toggle('visible', isRecurring && isWeekly);
-    elements.obligMonthday.classList.toggle('visible', isRecurring && !isWeekly && !isDaily);
-    elements.obligMonthdayLabel.classList.toggle('visible', isRecurring && !isWeekly && !isDaily);
-}
-
-export function updateCategorySelect(state, elements) {
-    let options = '';
-
-    if (state.currentType === 'income') {
-        options = `
-            <option value="Зарплата">💵 Зарплата</option>
-            <option value="Взял в долг">🤝 Взял в долг</option>
-            <option value="Другое">📦 Другое</option>
-        `;
-    } else {
-        const obligationTitles = [...new Set(state.obligations.map((obligation) => obligation.title))];
-
-        let obligationOptions = '';
-        obligationTitles.forEach((title) => {
-            if (title.trim()) {
-                obligationOptions += `<option value="${escapeHtml(title)}">📌 ${escapeHtml(title)} (обяз.)</option>`;
-            }
-        });
-
-        options = `
-            <option value="Еда">🍎 Еда</option>
-            <option value="Транспорт">🚗 Транспорт</option>
-            <option value="Кафе">☕ Кафе</option>
-            <option value="Шопинг">🛍️ Шопинг</option>
-            <option value="Развлечения">🎬 Развлечения</option>
-            <option value="Здоровье">💪 Здоровье</option>
-            ${obligationOptions}
-            <option value="Вернуть долг">💸 Вернуть долг</option>
-            <option value="Другое">📦 Другое</option>
-        `;
-    }
-
-    elements.categorySelect.innerHTML = options;
-    updateDebtFieldsVisibility(state, elements);
-}
-
 export function updateFilterUI(state, elements) {
     elements.filterAll.classList.toggle('active', state.currentFilter === 'all');
     elements.filterIncome.classList.toggle('active', state.currentFilter === 'income');
@@ -86,18 +40,82 @@ export function updateFilterUI(state, elements) {
     elements.filterDebt.classList.toggle('active', state.currentFilter === 'debt');
 }
 
-export function updateTypeToggleUI(state, elements) {
-    elements.incomeTypeBtn.classList.toggle('active', state.currentType === 'income');
-    elements.expenseTypeBtn.classList.toggle('active', state.currentType === 'expense');
+export function updateScreenUI(state, elements) {
+    const isHome = state.currentScreen === 'home';
+
+    elements.homeScreen.classList.toggle('active', isHome);
+    elements.settingsScreen.classList.toggle('active', !isHome);
+    elements.navHomeBtn.classList.toggle('active', isHome);
+    elements.navSettingsBtn.classList.toggle('active', !isHome);
 }
 
-export function updateTabUI(state, elements) {
-    const isOperations = state.currentTab === 'operations';
+export function updateThemeUI(state, elements) {
+    elements.appBody.dataset.theme = state.theme;
+    elements.themeToggle.checked = state.theme === 'dark';
+    elements.themeToggleCaption.textContent = state.theme === 'dark' ? 'Тёмная тема' : 'Светлая тема';
+}
 
-    elements.tabOperations.classList.toggle('active', isOperations);
-    elements.tabAnalytics.classList.toggle('active', !isOperations);
-    elements.operationsTab.classList.toggle('active', isOperations);
-    elements.analyticsTab.classList.toggle('active', !isOperations);
+export function updateAuthUI(state, elements) {
+    const isAuthenticated = Boolean(state.currentUser);
+    const isBusy = Boolean(state.isAuthBusy);
+
+    if (elements.authStatusBadge) {
+        elements.authStatusBadge.textContent = isAuthenticated ? 'Cloud' : 'Гость';
+        elements.authStatusBadge.classList.toggle('is-authenticated', isAuthenticated);
+        elements.authStatusBadge.classList.toggle('is-busy', isBusy);
+    }
+
+    setText(
+        elements.authStatusText,
+        isAuthenticated
+            ? 'Данные аккаунта синхронизируются с Supabase.'
+            : 'Авторизация выполняется на отдельной странице входа.'
+    );
+
+    setHidden(elements.authUserPanel, !isAuthenticated);
+    setText(elements.authUserEmail, isAuthenticated ? state.currentUser.email || 'Аккаунт без email' : '');
+
+    if (elements.authFields) {
+        elements.authFields.hidden = isAuthenticated;
+    }
+
+    setDisabled(elements.authEmailInput, isAuthenticated || isBusy);
+    setDisabled(elements.authPasswordInput, isAuthenticated || isBusy);
+    setDisabled(elements.signInBtn, isAuthenticated || isBusy);
+    setDisabled(elements.signUpBtn, isAuthenticated || isBusy);
+    setDisabled(elements.signOutBtn, !isAuthenticated || isBusy);
+
+    setHidden(elements.signInBtn, isAuthenticated);
+    setHidden(elements.signUpBtn, isAuthenticated);
+    setHidden(elements.signOutBtn, !isAuthenticated);
+
+    if (elements.authActions) {
+        elements.authActions.classList.toggle('auth-actions-authenticated', isAuthenticated);
+    }
+
+    if (isAuthenticated) {
+        if (elements.authEmailInput) {
+            elements.authEmailInput.value = '';
+        }
+
+        if (elements.authPasswordInput) {
+            elements.authPasswordInput.value = '';
+        }
+    }
+
+    setText(elements.syncStatus, state.syncMessage);
+
+    if (elements.syncStatus) {
+        elements.syncStatus.dataset.status = state.syncStatus;
+    }
+
+    if (state.syncStatus === 'error') {
+        setText(elements.authNote, 'Проверьте соединение или настройки Supabase. Локальная копия данных сохранена.');
+    } else if (isAuthenticated) {
+        setText(elements.authNote, 'Здесь можно проверить состояние синхронизации и выйти из аккаунта.');
+    } else {
+        setText(elements.authNote, 'Без активной сессии приложение перенаправляет на отдельную страницу авторизации.');
+    }
 }
 
 export function updateCurrentDateTime(elements) {
@@ -108,23 +126,6 @@ export function updateCurrentDateTime(elements) {
         month: 'long',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+        minute: '2-digit'
     });
-}
-
-export function setDefaultDates(elements) {
-    const today = new Date().toISOString().split('T')[0];
-    const todayDate = new Date(today);
-    if (!elements.obligDate.value) {
-        elements.obligDate.value = today;
-    }
-
-    elements.obligWeekday.value = String(todayDate.getDay());
-    elements.obligMonthday.value = String(todayDate.getDate());
-
-    const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[0];
-    elements.debtRepaymentDate.value = thirtyDaysLater;
 }

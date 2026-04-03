@@ -8,8 +8,87 @@ function requireElement(id) {
     return element;
 }
 
+function optionalElement(id) {
+    return document.getElementById(id);
+}
+
+function ensureElementId(selector, id) {
+    if (document.getElementById(id)) {
+        return;
+    }
+
+    const element = document.querySelector(selector);
+
+    if (element) {
+        element.id = id;
+    }
+}
+
+function ensureAuthPanel() {
+    if (!document.getElementById('authStatusBadge')) {
+        const settingsGrid = document.querySelector('#settingsScreen .settings-grid');
+
+        if (!settingsGrid) {
+            return;
+        }
+
+        const authCard = document.createElement('div');
+        authCard.className = 'settings-card auth-card';
+        authCard.innerHTML = `
+            <div class="settings-card-head">
+                <div>
+                    <h2>Аккаунт</h2>
+                    <p id="authStatusText">Управление текущей сессией Supabase.</p>
+                </div>
+                <span class="auth-badge" id="authStatusBadge">Cloud</span>
+            </div>
+
+            <div class="auth-user-panel" id="authUserPanel" hidden>
+                <div class="auth-user-label">Текущий аккаунт</div>
+                <div class="auth-user-email" id="authUserEmail"></div>
+            </div>
+
+            <div class="settings-actions auth-actions" id="authActions">
+                <button class="clear-btn" id="signOutBtn" type="button">Выйти</button>
+            </div>
+
+            <div class="sync-status" id="syncStatus">Аккаунт подключён.</div>
+            <div class="auth-note" id="authNote">Здесь отображается состояние синхронизации и доступен выход из аккаунта.</div>
+        `;
+
+        settingsGrid.prepend(authCard);
+    }
+
+    ensureElementId('.auth-actions', 'authActions');
+    ensureElementId('.auth-note', 'authNote');
+    ensureElementId('.sync-status', 'syncStatus');
+}
+
 export function getElements() {
+    ensureAuthPanel();
+
     return {
+        appBody: document.body,
+        homeScreen: requireElement('homeScreen'),
+        settingsScreen: requireElement('settingsScreen'),
+        navHomeBtn: requireElement('navHomeBtn'),
+        navSettingsBtn: requireElement('navSettingsBtn'),
+        openOperationModalBtn: requireElement('openOperationModalBtn'),
+        authStatusBadge: requireElement('authStatusBadge'),
+        authStatusText: requireElement('authStatusText'),
+        authUserPanel: requireElement('authUserPanel'),
+        authUserEmail: requireElement('authUserEmail'),
+        authFields: optionalElement('authFields'),
+        authActions: requireElement('authActions'),
+        authEmailInput: optionalElement('authEmailInput'),
+        authPasswordInput: optionalElement('authPasswordInput'),
+        signInBtn: optionalElement('signInBtn'),
+        signUpBtn: optionalElement('signUpBtn'),
+        signOutBtn: requireElement('signOutBtn'),
+        authNote: requireElement('authNote'),
+        syncStatus: requireElement('syncStatus'),
+        themeToggle: requireElement('themeToggle'),
+        themeToggleCaption: requireElement('themeToggleCaption'),
         realBalance: requireElement('realBalance'),
         realIncome: requireElement('realIncome'),
         realExpense: requireElement('realExpense'),
@@ -23,21 +102,7 @@ export function getElements() {
         historyCollapseIcon: requireElement('historyCollapseIcon'),
         obligationsList: requireElement('obligationsList'),
         collapseIcon: requireElement('collapseIcon'),
-        categorySelect: requireElement('categorySelect'),
-        debtFields: requireElement('debtFields'),
-        debtPerson: requireElement('debtPerson'),
-        debtRepaymentDate: requireElement('debtRepaymentDate'),
         transactionsList: requireElement('transactionsList'),
-        obligTitle: requireElement('obligTitle'),
-        obligAmount: requireElement('obligAmount'),
-        obligDate: requireElement('obligDate'),
-        obligIsRecurring: requireElement('obligIsRecurring'),
-        recurringFields: requireElement('recurringFields'),
-        obligFrequency: requireElement('obligFrequency'),
-        obligWeekday: requireElement('obligWeekday'),
-        obligMonthday: requireElement('obligMonthday'),
-        obligMonthdayLabel: requireElement('obligMonthdayLabel'),
-        amountInput: requireElement('amountInput'),
         pieChart: requireElement('pieChart'),
         pieLegend: requireElement('pieLegend'),
         barChart: requireElement('barChart'),
@@ -47,10 +112,6 @@ export function getElements() {
         potentialMonthTotal: requireElement('potentialMonthTotal'),
         obligationsMonthTotal: requireElement('obligationsMonthTotal'),
         forecastBalance: requireElement('forecastBalance'),
-        tabOperations: requireElement('tabOperations'),
-        tabAnalytics: requireElement('tabAnalytics'),
-        operationsTab: requireElement('operationsTab'),
-        analyticsTab: requireElement('analyticsTab'),
         currentDateTime: requireElement('currentDateTime'),
         obligationsHeader: requireElement('obligationsHeader'),
         calendarHeader: requireElement('calendarHeader'),
@@ -66,15 +127,11 @@ export function getElements() {
         formModalCancel: requireElement('formModalCancel'),
         formModalCancelAlt: requireElement('formModalCancelAlt'),
         formModalSubmit: requireElement('formModalSubmit'),
-        addObligationBtn: requireElement('addObligationBtn'),
-        addRegularBtn: requireElement('addRegularBtn'),
         clearAllBtn: requireElement('clearAllBtn'),
         filterAll: requireElement('filterAll'),
         filterIncome: requireElement('filterIncome'),
         filterExpense: requireElement('filterExpense'),
         filterDebt: requireElement('filterDebt'),
-        incomeTypeBtn: requireElement('incomeTypeBtn'),
-        expenseTypeBtn: requireElement('expenseTypeBtn'),
         prevMonthBtn: requireElement('prevMonthBtn'),
         nextMonthBtn: requireElement('nextMonthBtn')
     };
