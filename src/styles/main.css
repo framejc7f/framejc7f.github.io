@@ -1400,7 +1400,6 @@ h1 {
     .history-header,
     .history-controls,
     .selected-date-stats,
-    .calendar-nav,
     .theme-toggle {
         flex-direction: column;
         align-items: stretch;
@@ -1418,6 +1417,22 @@ h1 {
     .modal-primary-btn {
         width: 100%;
         justify-content: center;
+    }
+
+    .calendar-nav {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) 48px;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .calendar-nav button {
+        width: 48px;
+        padding-inline: 0;
+    }
+
+    #currentMonthYear {
+        justify-self: center;
     }
 
     .calendar-grid {
